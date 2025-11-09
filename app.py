@@ -308,7 +308,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 import streamlit as st
-st.write(st.secrets["OPENAI_API_KEY"])
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 # ============================================
