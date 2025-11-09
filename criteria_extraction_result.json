@@ -1,0 +1,89 @@
+{
+  "summary": "استخرجت المعايير الفنية، المالية، الجدول الزمني، الجودة، ومعايير أخرى من النص.",
+  "criteria": [
+    {
+      "name": "الخبرة والكفاءة الفنية",
+      "category": "technical",
+      "description": "تقييم الخبرة السابقة للمقدم في تنفيذ مشاريع مشابهة.",
+      "weight": null
+    },
+    {
+      "name": "المؤهلات والشهادات",
+      "category": "technical",
+      "description": "تقييم المؤهلات الأكاديمية والشهادات المهنية لأعضاء الفريق.",
+      "weight": null
+    },
+    {
+      "name": "الكوادر البشرية",
+      "category": "technical",
+      "description": "تقييم مدى كفاءة الفريق العامل في المشروع.",
+      "weight": null
+    },
+    {
+      "name": "الأدوات والتقنيات",
+      "category": "technical",
+      "description": "جودة الأدوات والبرامج المستخدمة في إنجاز المشروع.",
+      "weight": null
+    },
+    {
+      "name": "السعر المقترح",
+      "category": "financial",
+      "description": "تقييم السعر الكامل المقدم لتنفيذ المشروع.",
+      "weight": null
+    },
+    {
+      "name": "القيمة مقابل المال",
+      "category": "financial",
+      "description": "تقييم ما إذا كانت التكلفة معقولة وفقًا للجودة المتوقعة.",
+      "weight": null
+    },
+    {
+      "name": "الضمانات المالية",
+      "category": "financial",
+      "description": "التأكد من وجود ضمانات مالية كافية لتنفيذ المشروع.",
+      "weight": null
+    },
+    {
+      "name": "مدة التنفيذ",
+      "category": "timeline",
+      "description": "تقدير الوقت المطلوب لإكمال المشروع.",
+      "weight": null
+    },
+    {
+      "name": "الالتزام بالمواعيد",
+      "category": "timeline",
+      "description": "تقييم القدرة على الالتزام بالمواعيد النهائية المحددة.",
+      "weight": null
+    },
+    {
+      "name": "خطة العمل الزمنية",
+      "category": "timeline",
+      "description": "توزيع المهام والأنشطة عبر الجدول الزمني للمشروع.",
+      "weight": null
+    },
+    {
+      "name": "معايير الجودة الفنية",
+      "category": "quality",
+      "description": "تقييم مدى مطابقة المنتج النهائي لمعايير الجودة المطلوبة.",
+      "weight": null
+    },
+    {
+      "name": "ضمان الجودة",
+      "category": "quality",
+      "description": "وجود إجراءات لضمان الجودة خلال جميع مراحل المشروع.",
+      "weight": null
+    },
+    {
+      "name": "التدقيق والمراجعة",
+      "category": "quality",
+      "description": "توفير آلية لمراجعة وتدقيق العمل المنجز.",
+      "weight": null
+    },
+    {
+      "name": "أي معايير إضافية مذكورة",
+      "category": "other",
+      "description": "أي معايير إضافية تم ذكرها في الوثائق.",
+      "weight": null
+    }
+  ]
+}
