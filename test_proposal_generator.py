@@ -31,7 +31,8 @@ try:
         company_profile_file="data/outputs/company_profile.json",
         gap_analysis_file="data/outputs/gap_analysis.json",
         chat_history_file="data/outputs/chat_history.json",
-        output_file="data/outputs/proposal.md"
+        output_file="data/outputs/proposal.md",
+        generate_word=True  # Generate Word document
     )
     
     # Show preview
@@ -40,6 +41,12 @@ try:
     print("="*80)
     print(proposal[:1000])
     print("\n... (see full proposal in data/outputs/proposal.md)")
+    
+    # Check if Word document was created
+    if os.path.exists("data/outputs/proposal.docx"):
+        print("\n✅ Word document created: data/outputs/proposal.docx")
+    else:
+        print("\n⚠️ Word document was not created (check for errors above)")
     
     print("\n✅ Proposal generation test completed successfully!")
     
@@ -55,7 +62,8 @@ except ImportError as e:
     print(f"\n❌ Import Error: {e}")
     print("\n💡 Make sure:")
     print("   - proposal_generator.py is in the modules/ folder")
-    print("   - langgraph is installed: pip install langgraph")
+    print("   - Required packages are installed:")
+    print("     pip install langgraph python-docx")
     
 except Exception as e:
     print(f"\n❌ Unexpected error: {e}")

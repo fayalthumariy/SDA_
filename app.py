@@ -307,7 +307,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-import streamlit as st
+# Setup API Key
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 # ============================================
@@ -343,6 +343,9 @@ if 'first_question_added' not in st.session_state:
 if 'additional_info_asked' not in st.session_state:
     st.session_state.additional_info_asked = False
 
+if 'proposal_generated' not in st.session_state:
+    st.session_state.proposal_generated = False
+
 if 'conversation_model' not in st.session_state:
     st.session_state.conversation_model = None
 
@@ -364,10 +367,10 @@ def page_upload():
     st.markdown("""
     <div style='text-align: center; padding: 2rem 0;'>
         <h1 style='font-size: 3rem; margin-bottom: 0.5rem;'>
-            📄 مولّد العروض الفنية للمناقصات
+             نظام إنشاء العروض الفنية للمناقصات
         </h1>
         <p style='font-size: 1.2rem; color: #666; font-weight: 500;'>
-            RFP Proposal Generator - نظام ذكي لإنشاء عروض احترافية
+            نظام ذكي لتحليل المتطلبات وتوليد عروض فنية متكاملة
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -377,9 +380,9 @@ def page_upload():
     st.markdown("""
     <div style='background: linear-gradient(135deg, #E8EAF6 0%, #C5CAE9 100%); 
                 padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem;'>
-        <h3 style='color: #5E35B1; margin: 0;'>📋 الخطوة 1: رفع الملفات</h3>
+        <h3 style='color: #5E35B1; margin: 0;'> الخطوة الأولى: رفع المستندات الأساسية</h3>
         <p style='color: #666; margin-top: 0.5rem;'>
-            ارفع ملفات RFP والشركة لبدء عملية إنشاء العرض التلقائي
+            يرجى رفع المستندات المطلوبة لبدء تحليل المتطلبات الفنية ومطابقة قدرات الشركة مع نطاق العمل
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -391,16 +394,25 @@ def page_upload():
         <div style='background: white; padding: 1.5rem; border-radius: 15px; 
                     border: 2px solid #E8EAF6; margin-bottom: 1rem;'>
             <h3 style='color: #5E35B1; margin: 0; display: flex; align-items: center;'>
-                📋 <span style='margin-right: 0.5rem;'>ملف RFP</span>
+                 <span style='margin-right: 0.5rem;'>  (RFP) وثيقة طلب العرض</span>
             </h3>
         </div>
         """, unsafe_allow_html=True)
         
+        st.markdown("""
+        <div style='font-size: 1.05rem; font-weight: 600; margin-bottom: 0.3rem;'>
+          يرجى إرفاق وثيقة طلب العرض (RFP)
+        </div>
+        <div style='color: #777; font-size: 0.9rem; margin-bottom: 0.8rem;'>
+        PDF  صيغة الملف المطلوبة   
+        </div>
+        """, unsafe_allow_html=True)
+
         rfp_file = st.file_uploader(
-            "ارفع ملف RFP (PDF)",
+            label=" ",  # نتركه فارغ حتى لا يظهر نص مزدوج
             type=['pdf'],
             key='rfp_uploader',
-            help="ملف كراسة الشروط والمواصفات"
+            help="ملف وثيقة طلب العرض / كراسة الشروط والمواصفات"
         )
         
         if rfp_file:
@@ -412,23 +424,30 @@ def page_upload():
             
             st.session_state.rfp_uploaded = True
             st.session_state.rfp_path = rfp_path
-            st.success(f"✅ تم رفع ملف RFP: {rfp_file.name}")
+            st.success(f" تم رفع ملف  RFP : {rfp_file.name}")
     
     with col2:
         st.markdown("""
         <div style='background: white; padding: 1.5rem; border-radius: 15px; 
                     border: 2px solid #E8EAF6; margin-bottom: 1rem;'>
             <h3 style='color: #5E35B1; margin: 0; display: flex; align-items: center;'>
-                🏢 <span style='margin-right: 0.5rem;'>ملف الشركة</span>
+                 <span style='margin-right: 0.5rem;'> ملف تعريف الشركة</span>
             </h3>
+        </div>
+
+        <div style='font-size: 1.05rem; font-weight: 600; margin-bottom: 0.3rem;'>
+        يرجى إرفاق ملف تعريف الشركة الذي يتضمن البيانات والخبرات السابقة
+        </div>
+        <div style='color: #777; font-size: 0.9rem; margin-bottom: 0.8rem;'>
+         PDF صيغة الملف المطلوبة  
         </div>
         """, unsafe_allow_html=True)
         
         company_file = st.file_uploader(
-            "ارفع ملف بروفايل الشركة (PDF)",
+            label=" ",  # نخليه فارغ حتى لا يكرر النص
             type=['pdf'],
             key='company_uploader',
-            help="ملف التعريف بالشركة وقدراتها"
+            help="ملف التعريف بالشركة الذي يتضمن الخبرات والقدرات."
         )
         
         if company_file:
@@ -440,15 +459,15 @@ def page_upload():
             
             st.session_state.company_uploaded = True
             st.session_state.company_path = company_path
-            st.success(f"✅ تم رفع ملف الشركة: {company_file.name}")
+            st.success(f" تم رفع ملف الشركة : {company_file.name}")
     
     st.markdown("---")
     
     # Status
     if st.session_state.rfp_uploaded and st.session_state.company_uploaded:
-        st.success("✅ تم رفع جميع الملفات المطلوبة!")
+        st.success(" ! تم رفع جميع الملفات المطلوبة ")
     else:
-        st.warning("⚠️ يرجى رفع كلا الملفين للمتابعة")
+        st.warning("يرجى  إكمال  رفع  المتطلبات  قبل  المتابعة")
     
     # Next button
     st.markdown("<br>", unsafe_allow_html=True)
@@ -458,18 +477,18 @@ def page_upload():
         
         button_html = f"""
         <div style='text-align: center; margin: 2rem 0;'>
-            {'<p style="color: #999; font-size: 0.9rem; margin-bottom: 1rem;">⚠️ يرجى رفع كلا الملفين للمتابعة</p>' if next_disabled else ''}
+            {'<p style="color: #999; font-size: 0.9rem; margin-bottom: 1rem;"> يرجى إكمال رفع المستندين قبل المتابعة </p>' if next_disabled else ''}
         </div>
         """
         st.markdown(button_html, unsafe_allow_html=True)
         
         if st.button(
-            "🚀 التالي: تحليل الفجوات",
+            " التالي : تحليل الفجوات",
             disabled=next_disabled,
             use_container_width=True,
             type="primary"
         ):
-            with st.spinner("جاري معالجة الملفات..."):
+            with st.spinner("جاري معالجة الملفات"):
                 # Process files
                 success = process_files()
                 
@@ -477,7 +496,7 @@ def page_upload():
                     st.session_state.page = 2
                     st.rerun()
                 else:
-                    st.error("❌ حدث خطأ في معالجة الملفات")
+                    st.error(" حدث خطأ في معالجة الملفات")
 
 
 # ============================================
@@ -545,21 +564,21 @@ def process_files():
         from modules.gap_analyzer import perform_full_gap_analysis
         
         # Step 1: Extract RFP
-        st.write("📋 استخراج معايير RFP...")
+        st.write(" ... RFPجاري استخراج معايير ")
         rfp_result = extract_and_weight_rfp_criteria(
             pdf_path=st.session_state.rfp_path,
             output_file="data/outputs/criteria_with_weights.json"
         )
         
         # Step 2: Extract Company Profile
-        st.write("🏢 استخراج بروفايل الشركة...")
+        st.write(" ...جاري استخراج معلومات الشركة")
         company_result = extract_company_profile_from_pdf(
             pdf_path=st.session_state.company_path,
             output_file="data/outputs/company_profile.json"
         )
         
         # Step 3: Gap Analysis
-        st.write("🔍 تحليل الفجوات...")
+        st.write(" ...جاري تحليل الفجوات")
         gap_result = perform_full_gap_analysis(
             rfp_criteria_file="data/outputs/criteria_with_weights.json",
             company_profile_file="data/outputs/company_profile.json",
@@ -589,18 +608,18 @@ def page_chatbot():
             💬 مساعد جمع المعلومات الذكي
         </h1>
         <p style='font-size: 1.1rem; color: #666;'>
-            تفاعل معنا للإجابة على الأسئلة وتوضيح المعلومات الناقصة
+            الرجاء الاجابة على الأسئلة وتوضيح المعلومات الناقصة
         </p>
     </div>
     """, unsafe_allow_html=True)
     
     # Check if there are questions
     if not st.session_state.questions:
-        st.success("✅ لا توجد فجوات - الشركة تلبي جميع المتطلبات!")
+        st.success(" لا توجد فجوات - الشركة تلبي جميع المتطلبات!")
         
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
-            if st.button("الانتقال لتوليد العرض ⬅️", use_container_width=True, type="primary"):
+            if st.button("الانتقال لتوليد العرض ", use_container_width=True, type="primary"):
                 st.session_state.page = 3
                 st.rerun()
         return
@@ -611,7 +630,7 @@ def page_chatbot():
     progress = current_index / total_questions if not st.session_state.additional_info_asked else 1.0
     
     st.progress(progress)
-    st.caption(f"📊 السؤال {current_index} من {total_questions}")
+    st.caption(f" السؤال {current_index} من {total_questions}")
     st.markdown("---")
     
     # Add first question to history if not added yet
@@ -856,17 +875,17 @@ def page_chatbot():
     
     else:
         # All done - show summary and next button
-        st.success("✅ تم الانتهاء من جمع جميع المعلومات!")
+        st.success(" تم الانتهاء من جمع جميع المعلومات!")
         
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.metric("عدد الأسئلة", len(st.session_state.answers))
             if st.session_state.additional_info:
-                st.info("✅ تم إضافة معلومات إضافية")
+                st.info(" تم إضافة معلومات إضافية")
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            if st.button("الانتقال لتوليد العرض ⬅️", use_container_width=True, type="primary"):
+            if st.button("الانتقال لتوليد العرض ", use_container_width=True, type="primary"):
                 st.session_state.page = 3
                 st.rerun()
 
@@ -921,15 +940,15 @@ def page_proposal():
     st.markdown("---")
     
     # Summary of collected data
-    st.subheader("📊 ملخص البيانات المجمعة")
+    st.subheader(" ملخص البيانات المجمعة")
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("معايير RFP", "✅ جاهز")
+        st.metric("معايير RFP", " جاهز")
     
     with col2:
-        st.metric("معلومات الشركة", "✅ جاهز")
+        st.metric("معلومات الشركة", " جاهز")
     
     with col3:
         answers_count = len(st.session_state.answers)
@@ -938,7 +957,7 @@ def page_proposal():
     st.markdown("---")
     
     # Generation section
-    st.subheader("🚀 توليد العرض")
+    st.subheader(" توليد العرض")
     
     st.info("""
     💡 **ملاحظة:** عملية توليد العرض قد تستغرق 2-5 دقائق حيث يقوم الذكاء الاصطناعي بـ:
@@ -947,30 +966,33 @@ def page_proposal():
     - مراجعة وتنسيق المحتوى
     """)
     
-    # Check if proposal already generated
-    proposal_md_exists = os.path.exists("data/outputs/proposal.md")
-    proposal_pdf_exists = os.path.exists("data/outputs/proposal.pdf")
-    
-    if proposal_pdf_exists or proposal_md_exists:
-        st.success("✅ تم توليد عرض سابقاً")
+    # Check if proposal already generated in THIS session
+    if st.session_state.get('proposal_generated', False):
+        st.success(" تم توليد العرض بنجاح!")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🔄 توليد عرض جديد", use_container_width=True, type="primary"):
-                generate_proposal_workflow()
+            if st.button(" توليد عرض جديد", use_container_width=True, type="primary"):
+                # Clear the flag and regenerate
+                st.session_state.proposal_generated = False
+                st.rerun()
         
         with col2:
-            # Prefer PDF if exists, otherwise MD
-            if proposal_pdf_exists:
-                with open("data/outputs/proposal.pdf", 'rb') as f:
-                    pdf_content = f.read()
+            # Check which format exists
+            proposal_docx_exists = os.path.exists("data/outputs/proposal.docx")
+            proposal_md_exists = os.path.exists("data/outputs/proposal.md")
+            
+            # Prefer Word if exists, otherwise MD
+            if proposal_docx_exists:
+                with open("data/outputs/proposal.docx", 'rb') as f:
+                    docx_content = f.read()
                 
                 st.download_button(
-                    label="📥 تحميل العرض (PDF)",
-                    data=pdf_content,
-                    file_name="proposal.pdf",
-                    mime="application/pdf",
+                    label=" تحميل العرض (Word)",
+                    data=docx_content,
+                    file_name="proposal.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     use_container_width=True
                 )
             elif proposal_md_exists:
@@ -978,7 +1000,7 @@ def page_proposal():
                     md_content = f.read()
                 
                 st.download_button(
-                    label="📥 تحميل العرض (Markdown)",
+                    label=" تحميل العرض (Markdown)",
                     data=md_content,
                     file_name="proposal.md",
                     mime="text/markdown",
@@ -987,10 +1009,10 @@ def page_proposal():
         
         # Show preview
         st.markdown("---")
-        st.subheader("👁️ معاينة العرض")
+        st.subheader(" معاينة العرض")
         
         # Read markdown for preview
-        if proposal_md_exists:
+        if os.path.exists("data/outputs/proposal.md"):
             with open("data/outputs/proposal.md", 'r', encoding='utf-8') as f:
                 proposal_content = f.read()
             
@@ -1002,27 +1024,27 @@ def page_proposal():
         col1, col2, col3 = st.columns([1, 2, 1])
         
         with col2:
-            if st.button("🎯 توليد العرض الفني", use_container_width=True, type="primary"):
+            if st.button(" توليد العرض الفني", use_container_width=True, type="primary"):
                 generate_proposal_workflow()
 
 
 def generate_proposal_workflow():
     """Run the proposal generation workflow"""
     
-    with st.spinner("🔄 جاري توليد العرض... (قد يستغرق 2-5 دقائق)"):
+    with st.spinner("جاري توليد العرض... (قد يستغرق 2-5 دقائق)"):
         try:
             # Progress indicators
             progress_bar = st.progress(0)
             status_text = st.empty()
             
             # Import proposal generator
-            status_text.text("📦 تحميل الموديول...")
+            status_text.text(" تحميل الموديول...")
             progress_bar.progress(10)
             
             from modules.proposal_generator import generate_proposal
             
-            # Generate proposal (both MD and PDF)
-            status_text.text("🤖 بدء توليد الأقسام...")
+            # Generate proposal (both MD and Word)
+            status_text.text(" بدء توليد الأقسام...")
             progress_bar.progress(30)
             
             proposal = generate_proposal(
@@ -1031,33 +1053,36 @@ def generate_proposal_workflow():
                 gap_analysis_file="data/outputs/gap_analysis.json",
                 chat_history_file="data/outputs/chat_history.json",
                 output_file="data/outputs/proposal.md",
-                generate_pdf=True  # Generate PDF version
+                generate_word=True  # Generate Word document
             )
             
             progress_bar.progress(100)
-            status_text.text("✅ تم توليد العرض بنجاح!")
+            status_text.text(" تم توليد العرض بنجاح!")
             
-            st.success("🎉 تم توليد العرض الفني بنجاح!")
+            # Mark as generated in session
+            st.session_state.proposal_generated = True
             
-            # Check if PDF was created
-            pdf_exists = os.path.exists("data/outputs/proposal.pdf")
+            st.success(" تم توليد العرض الفني بنجاح!")
             
-            if pdf_exists:
-                # Offer PDF download
-                with open("data/outputs/proposal.pdf", 'rb') as f:
-                    pdf_content = f.read()
+            # Check if Word was created
+            docx_exists = os.path.exists("data/outputs/proposal.docx")
+            
+            if docx_exists:
+                # Offer Word download
+                with open("data/outputs/proposal.docx", 'rb') as f:
+                    docx_content = f.read()
                 
                 st.download_button(
-                    label="📥 تحميل العرض (PDF)",
-                    data=pdf_content,
-                    file_name="proposal.pdf",
-                    mime="application/pdf",
+                    label=" تحميل العرض (Word)",
+                    data=docx_content,
+                    file_name="proposal.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     use_container_width=True
                 )
             else:
                 # Fallback to markdown
                 st.download_button(
-                    label="📥 تحميل العرض (Markdown)",
+                    label=" تحميل العرض (Markdown)",
                     data=proposal,
                     file_name="proposal.md",
                     mime="text/markdown",
@@ -1066,17 +1091,17 @@ def generate_proposal_workflow():
             
             # Show preview
             st.markdown("---")
-            st.subheader("👁️ معاينة العرض")
+            st.subheader(" معاينة العرض")
             
             with st.expander("عرض المحتوى", expanded=True):
                 st.markdown(proposal)
             
         except FileNotFoundError as e:
-            st.error(f"❌ خطأ: ملف مفقود - {e}")
+            st.error(f" خطأ: ملف مفقود - {e}")
             st.info("💡 تأكد من إكمال جميع الخطوات السابقة")
             
         except Exception as e:
-            st.error(f"❌ حدث خطأ: {e}")
+            st.error(f" حدث خطأ: {e}")
             with st.expander("تفاصيل الخطأ"):
                 import traceback
                 st.code(traceback.format_exc())
@@ -1106,9 +1131,9 @@ def main():
         
         # Show current page
         page_names = {
-            1: "📤 رفع الملفات",
-            2: "💬 جمع المعلومات",
-            3: "📄 توليد العرض"
+            1: " رفع الملفات",
+            2: " جمع المعلومات",
+            3: " توليد العرض"
         }
         
         st.markdown("""
@@ -1153,21 +1178,21 @@ def main():
         
         status_items = []
         if st.session_state.rfp_uploaded:
-            status_items.append(("✅", "RFP مرفوع", True))
+            status_items.append(("", "RFP مرفوع", True))
         else:
-            status_items.append(("⏳", "RFP غير مرفوع", False))
+            status_items.append(("", "RFP غير مرفوع", False))
         
         if st.session_state.company_uploaded:
-            status_items.append(("✅", "ملف الشركة مرفوع", True))
+            status_items.append(("", "ملف الشركة مرفوع", True))
         else:
-            status_items.append(("⏳", "ملف الشركة غير مرفوع", False))
+            status_items.append(("", "ملف الشركة غير مرفوع", False))
         
         if st.session_state.processing_done:
             questions_count = len(st.session_state.questions)
-            status_items.append(("✅", f"تم استخراج {questions_count} سؤال", True))
+            status_items.append(("", f"تم استخراج {questions_count} سؤال", True))
         
         if st.session_state.additional_info_asked:
-            status_items.append(("✅", "تم جمع جميع المعلومات", True))
+            status_items.append(("", "تم جمع جميع المعلومات", True))
         
         for icon, text, is_complete in status_items:
             color = "rgba(76, 175, 80, 0.9)" if is_complete else "rgba(255,255,255,0.5)"

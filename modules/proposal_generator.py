@@ -11,15 +11,7 @@ from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, START, END
 from langgraph.types import Send
 from langchain_openai import ChatOpenAI
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
-from reportlab.lib.enums import TA_RIGHT, TA_CENTER
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from arabic_reshaper import reshape
-from bidi.algorithm import get_display
+import pypandoc
 
 
 # =========================
@@ -129,13 +121,7 @@ def get_fixed_proposal_sections() -> ProposalSections:
                     "إن لم يُذكر بند محدد اكتب: غير مذكور."
                 ),
             ),
-            Section(
-                name="الأسئلة والاستفسارات والمتطلبات الإضافية من الجهة",
-                description=(
-                    "ادمج الأسئلة العامة وأسئلة الفجوات في قائمة مرقمة مختصرة "
-                    "وتوضح ما يلزم من الجهة للاعتماد أو الإيضاح."
-                ),
-            ),
+            
             Section(
                 name="الخاتمة",
                 description=(
@@ -232,33 +218,40 @@ def writer_node(state: WorkerState):
         answers_summary = f"إجمالي الأسئلة المجاب عليها: {total_answers}"
 
     prompt = f"""
-أنت تكتب قسم "{section_name}" ضمن عرض رسمي.
+أنت خبير في كتابة العروض الفنية للمناقصات الحكومية.
 
-المتطلبات العامة:
-- اكتب بالعربية الفصحى المهنية، مختصر وعملي.
-- لا تُخْتلق معلومات. استخدم RFP و company_info فقط.
-- إذا لم تتوفر معلومة ضرورية اكتب حرفياً: غير مذكور.
-- نظّم الفقرات بوضوح؛ استخدم قائمة/جدول نصّي فقط عند الحاجة.
+قسم العرض المطلوب: "{section_name}"
 
-سياق المناقصة (ملخص المتطلبات):
-{state['rfp_summary']}
+⚠️ تعليمات مهمة:
+1. لا تكرر عنوان القسم في المحتوى (العنوان موجود بالفعل)
+2. ابدأ مباشرة بالمحتوى بدون كتابة عنوان
+3. استخدم معلومات حقيقية فقط من البيانات المتوفرة
+4. إذا لم تتوفر معلومة، اكتب: "غير مذكور" أو "سيتم توفيرها لاحقاً"
+5. اكتب بأسلوب رسمي واضح ومختصر
+6. استخدم قوائم نقطية فقط عند الحاجة
 
-معلومات الشركة (قدراتنا وخدماتنا):
-{state['company_info']}
-
-نتائج المطابقة:
-{gap_summary}
-
-إجابات المستخدم على الأسئلة:
-{answers_summary}
-
-تعليمات خاصة لهذا القسم:
+وصف القسم المطلوب:
 {section_desc}
 
-قواعد إضافية لهذا القسم:
-- {rules_text}
+قواعد خاصة بهذا القسم:
+{rules_text}
 
-اكتب نص القسم النهائي فقط.
+===== البيانات المتوفرة =====
+
+📋 معلومات المناقصة (RFP):
+{state['rfp_summary']}
+
+🏢 معلومات الشركة:
+{state['company_info']}
+
+📊 نتائج تحليل الفجوات:
+{gap_summary}
+
+💬 إجابات المستخدم:
+{answers_summary}
+
+===== المطلوب =====
+اكتب محتوى القسم مباشرة باللغة العربية الفصحى، بدون كتابة العنوان مرة أخرى.
 """
 
     messages = [
@@ -340,110 +333,26 @@ def build_proposal_workflow():
     return proposal_builder.compile()
 
 
-def markdown_to_pdf(markdown_text: str, output_file: str):
+def markdown_to_word(markdown_file: str, output_file: str):
     """
-    Convert markdown proposal to PDF with Arabic support
+    Convert markdown proposal to Word document with Arabic support
     
     Args:
-        markdown_text: Proposal in markdown format
-        output_file: Path to save PDF file
+        markdown_file: Path to markdown file
+        output_file: Path to save Word document
     """
     
-    # Create PDF document
-    doc = SimpleDocTemplate(
-        output_file,
-        pagesize=A4,
-        rightMargin=inch,
-        leftMargin=inch,
-        topMargin=inch,
-        bottomMargin=inch
-    )
-    
-    # Styles
-    styles = getSampleStyleSheet()
-    
-    # Arabic title style
-    title_style = ParagraphStyle(
-        'ArabicTitle',
-        parent=styles['Title'],
-        alignment=TA_CENTER,
-        fontSize=24,
-        spaceAfter=30,
-        textColor='#5E35B1'
-    )
-    
-    # Arabic heading style
-    heading_style = ParagraphStyle(
-        'ArabicHeading',
-        parent=styles['Heading1'],
-        alignment=TA_RIGHT,
-        fontSize=16,
-        spaceAfter=12,
-        spaceBefore=12,
-        textColor='#1976D2'
-    )
-    
-    # Arabic body style
-    body_style = ParagraphStyle(
-        'ArabicBody',
-        parent=styles['BodyText'],
-        alignment=TA_RIGHT,
-        fontSize=11,
-        leading=18,
-        spaceAfter=10
-    )
-    
-    # Build story (content)
-    story = []
-    
-    # Parse markdown and convert to PDF elements
-    lines = markdown_text.split('\n')
-    
-    for line in lines:
-        line = line.strip()
-        
-        if not line:
-            story.append(Spacer(1, 0.2*inch))
-            continue
-        
-        # Handle markdown syntax
-        if line.startswith('# '):
-            # Main title
-            text = line[2:].strip()
-            reshaped_text = reshape(text)
-            bidi_text = get_display(reshaped_text)
-            story.append(Paragraph(bidi_text, title_style))
-            story.append(Spacer(1, 0.3*inch))
-            
-        elif line.startswith('### '):
-            # Section heading
-            text = line[4:].strip()
-            reshaped_text = reshape(text)
-            bidi_text = get_display(reshaped_text)
-            story.append(Spacer(1, 0.2*inch))
-            story.append(Paragraph(bidi_text, heading_style))
-            
-        elif line.startswith('---'):
-            # Separator - page break
-            story.append(PageBreak())
-            
-        elif line.startswith('- '):
-            # Bullet point
-            text = '• ' + line[2:].strip()
-            reshaped_text = reshape(text)
-            bidi_text = get_display(reshaped_text)
-            story.append(Paragraph(bidi_text, body_style))
-            
-        else:
-            # Regular paragraph
-            if line:
-                reshaped_text = reshape(line)
-                bidi_text = get_display(reshaped_text)
-                story.append(Paragraph(bidi_text, body_style))
-    
-    # Build PDF
-    doc.build(story)
-    print(f"✓ PDF created: {output_file}")
+    try:
+        pypandoc.convert_file(
+            markdown_file,
+            'docx',
+            outputfile=output_file,
+            extra_args=['--standalone']
+        )
+        print(f"✓ Word document created: {output_file}")
+    except Exception as e:
+        print(f"⚠️ Warning: Could not generate Word document: {e}")
+        raise
 
 
 # =========================
@@ -455,7 +364,7 @@ def generate_proposal(
     gap_analysis_file: str = "data/outputs/gap_analysis.json",
     chat_history_file: str = "data/outputs/chat_history.json",
     output_file: str = "data/outputs/proposal.md",
-    generate_pdf: bool = True
+    generate_word: bool = True
 ):
     """
     Generate proposal from all collected data
@@ -466,7 +375,7 @@ def generate_proposal(
         gap_analysis_file: Path to gap analysis JSON
         chat_history_file: Path to chat history JSON
         output_file: Path to save generated proposal (markdown)
-        generate_pdf: Whether to also generate PDF version
+        generate_word: Whether to also generate Word document
         
     Returns:
         str: Generated proposal in markdown format
@@ -498,13 +407,126 @@ def generate_proposal(
     # Prepare RFP summary
     rfp_summary = rfp_data.get('summary', '')
     if not rfp_summary and rfp_data.get('criteria'):
-        # Create summary from criteria
-        criteria_list = [f"- {c['name']}: {c['description']}" 
-                        for c in rfp_data['criteria'][:10]]  # First 10
-        rfp_summary = "RFP Criteria:\n" + "\n".join(criteria_list)
+        # Create detailed summary from criteria
+        criteria_texts = []
+        for i, c in enumerate(rfp_data['criteria'][:15], 1):  # First 15
+            criteria_texts.append(
+                f"{i}. {c['name']}\n"
+                f"   الوصف: {c.get('description', 'غير محدد')}\n"
+                f"   الوزن: {c.get('weight', 0)}%"
+            )
+        rfp_summary = "معايير المناقصة:\n\n" + "\n\n".join(criteria_texts)
     
-    # Prepare company info as text
-    company_info_text = json.dumps(company_data, ensure_ascii=False, indent=2)
+    # Prepare company info as readable text (not JSON)
+    company_info_parts = []
+    
+    # Basic info
+    company_info_parts.append("=== معلومات الشركة الأساسية ===")
+    company_info_parts.append(f"اسم الشركة: {company_data.get('company_name', 'غير محدد')}")
+    
+    if company_data.get('establishment_date'):
+        company_info_parts.append(f"تاريخ التأسيس: {company_data['establishment_date']}")
+    
+    if company_data.get('licenses'):
+        licenses = ", ".join(company_data['licenses']) if isinstance(company_data['licenses'], list) else company_data['licenses']
+        company_info_parts.append(f"التراخيص: {licenses}")
+    
+    if company_data.get('certifications'):
+        certs = ", ".join(company_data['certifications']) if isinstance(company_data['certifications'], list) else company_data['certifications']
+        company_info_parts.append(f"الشهادات: {certs}")
+    
+    # Services
+    if company_data.get('services'):
+        company_info_parts.append("\n=== الخدمات المقدمة ===")
+        services = company_data['services']
+        if isinstance(services, list):
+            for i, service in enumerate(services, 1):
+                company_info_parts.append(f"{i}. {service}")
+        else:
+            company_info_parts.append(str(services))
+    
+    # Fields/Domains
+    if company_data.get('fields') or company_data.get('domains'):
+        company_info_parts.append("\n=== المجالات ===")
+        fields = company_data.get('fields') or company_data.get('domains')
+        if isinstance(fields, list):
+            for i, field in enumerate(fields, 1):
+                company_info_parts.append(f"{i}. {field}")
+        else:
+            company_info_parts.append(str(fields))
+    
+    # Values and goals
+    if company_data.get('values'):
+        company_info_parts.append("\n=== القيم ===")
+        values = company_data['values']
+        if isinstance(values, list):
+            for i, value in enumerate(values, 1):
+                company_info_parts.append(f"{i}. {value}")
+        else:
+            company_info_parts.append(str(values))
+    
+    if company_data.get('goals'):
+        company_info_parts.append("\n=== الأهداف ===")
+        goals = company_data['goals']
+        if isinstance(goals, list):
+            for i, goal in enumerate(goals, 1):
+                company_info_parts.append(f"{i}. {goal}")
+        else:
+            company_info_parts.append(str(goals))
+    
+    # Previous projects
+    if company_data.get('previous_projects'):
+        company_info_parts.append("\n=== المشاريع السابقة ===")
+        projects = company_data['previous_projects']
+        if isinstance(projects, list):
+            for i, project in enumerate(projects, 1):
+                if isinstance(project, dict):
+                    company_info_parts.append(f"{i}. {project.get('name', 'مشروع')}")
+                    if project.get('client'):
+                        company_info_parts.append(f"   الجهة: {project['client']}")
+                    if project.get('description'):
+                        company_info_parts.append(f"   الوصف: {project['description']}")
+                else:
+                    company_info_parts.append(f"{i}. {project}")
+    
+    # Government projects
+    if company_data.get('government_projects'):
+        company_info_parts.append("\n=== المشاريع الحكومية ===")
+        gov_projects = company_data['government_projects']
+        if isinstance(gov_projects, list):
+            for i, project in enumerate(gov_projects, 1):
+                if isinstance(project, dict):
+                    company_info_parts.append(f"{i}. {project.get('name', 'مشروع حكومي')}")
+                    if project.get('entity'):
+                        company_info_parts.append(f"   الجهة: {project['entity']}")
+                    if project.get('role'):
+                        company_info_parts.append(f"   الدور: {project['role']}")
+                    if project.get('result'):
+                        company_info_parts.append(f"   النتيجة: {project['result']}")
+                else:
+                    company_info_parts.append(f"{i}. {project}")
+    
+    # Team structure
+    if company_data.get('team_structure'):
+        company_info_parts.append("\n=== الهيكل الإداري والفني ===")
+        team = company_data['team_structure']
+        if isinstance(team, dict):
+            for role, details in team.items():
+                company_info_parts.append(f"• {role}: {details}")
+        else:
+            company_info_parts.append(str(team))
+    
+    # Contact info
+    if company_data.get('phone') or company_data.get('email') or company_data.get('website'):
+        company_info_parts.append("\n=== معلومات الاتصال ===")
+        if company_data.get('phone'):
+            company_info_parts.append(f"الهاتف: {company_data['phone']}")
+        if company_data.get('email'):
+            company_info_parts.append(f"البريد الإلكتروني: {company_data['email']}")
+        if company_data.get('website'):
+            company_info_parts.append(f"الموقع: {company_data['website']}")
+    
+    company_info_text = "\n".join(company_info_parts)
     
     # Build workflow
     print("\n⚙️ Building proposal workflow...")
@@ -537,16 +559,16 @@ def generate_proposal(
     
     print(f"\n✅ Markdown proposal saved to: {output_file}")
     
-    # Generate PDF version
-    if generate_pdf:
-        print("\n📄 Converting to PDF...")
-        pdf_file = output_file.replace('.md', '.pdf')
+    # Generate Word document version
+    if generate_word:
+        print("\n📄 Converting to Word document...")
+        docx_file = output_file.replace('.md', '.docx')
         
         try:
-            markdown_to_pdf(final_proposal, pdf_file)
-            print(f"✅ PDF proposal saved to: {pdf_file}")
+            markdown_to_word(output_file, docx_file)
+            print(f"✅ Word document saved to: {docx_file}")
         except Exception as e:
-            print(f"⚠️ Warning: Could not generate PDF: {e}")
+            print(f"⚠️ Warning: Could not generate Word document: {e}")
             print("   Markdown version is still available")
     
     print("="*70)
