@@ -367,7 +367,7 @@ def page_upload():
     st.markdown("""
     <div style='text-align: center; padding: 2rem 0;'>
         <h1 style='font-size: 3rem; margin-bottom: 0.5rem;'>
-             نظام إنشاء العروض الفنية للمناقصات
+          وِفاق
         </h1>
         <p style='font-size: 1.2rem; color: #666; font-weight: 500;'>
             نظام ذكي لتحليل المتطلبات وتوليد عروض فنية متكاملة
@@ -483,12 +483,12 @@ def page_upload():
         st.markdown(button_html, unsafe_allow_html=True)
         
         if st.button(
-            " التالي : تحليل الفجوات",
+            " التالي ",
             disabled=next_disabled,
             use_container_width=True,
             type="primary"
         ):
-            with st.spinner("جاري معالجة الملفات"):
+            with st.spinner("...جاري فحص الملفات والتأكد من سلامة البيانات"):
                 # Process files
                 success = process_files()
                 
@@ -564,21 +564,21 @@ def process_files():
         from modules.gap_analyzer import perform_full_gap_analysis
         
         # Step 1: Extract RFP
-        st.write(" ... RFPجاري استخراج معايير ")
+        #st.write(" ... يتم تحليل وثيقة طلب العرض (RFP) واستخلاص المتطلبات الفنية")
         rfp_result = extract_and_weight_rfp_criteria(
             pdf_path=st.session_state.rfp_path,
             output_file="data/outputs/criteria_with_weights.json"
         )
         
         # Step 2: Extract Company Profile
-        st.write(" ...جاري استخراج معلومات الشركة")
+        #st.write(" ...يتم تحليل ملف تعريف الشركة واستخراج القدرات والخبرات التشغيلية")
         company_result = extract_company_profile_from_pdf(
             pdf_path=st.session_state.company_path,
             output_file="data/outputs/company_profile.json"
         )
         
         # Step 3: Gap Analysis
-        st.write(" ...جاري تحليل الفجوات")
+        #st.write(" ...يتم تنفيذ تحليل الفجوات لمواءمة قدرات الشركة مع متطلبات المشروع")
         gap_result = perform_full_gap_analysis(
             rfp_criteria_file="data/outputs/criteria_with_weights.json",
             company_profile_file="data/outputs/company_profile.json",
@@ -605,7 +605,7 @@ def page_chatbot():
     st.markdown("""
     <div style='text-align: center; padding: 1.5rem 0;'>
         <h1 style='font-size: 2.5rem; margin-bottom: 0.5rem;'>
-            💬 مساعد جمع المعلومات الذكي
+              وِفاق
         </h1>
         <p style='font-size: 1.1rem; color: #666;'>
             الرجاء الاجابة على الأسئلة وتوضيح المعلومات الناقصة
@@ -619,7 +619,7 @@ def page_chatbot():
         
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
-            if st.button("الانتقال لتوليد العرض ", use_container_width=True, type="primary"):
+            if st.button("إنشاء العرض الفني", use_container_width=True, type="primary"):
                 st.session_state.page = 3
                 st.rerun()
         return
@@ -676,28 +676,28 @@ def page_chatbot():
             if entry['type'] == 'question':
                 st.markdown(f"""
                 <div class="ai-message">
-                    <div class="message-label">🤖 المساعد - السؤال {entry['index'] + 1}</div>
+                    <div class="message-label"> وِفاق - السؤال {entry['index'] + 1}</div>
                     <div>{entry['content']}</div>
                 </div>
                 """, unsafe_allow_html=True)
             elif entry['type'] == 'answer':
                 st.markdown(f"""
                 <div class="user-message">
-                    <div class="message-label">👤 أنت</div>
+                    <div class="message-label"> أنت</div>
                     <div>{entry['content']}</div>
                 </div>
                 """, unsafe_allow_html=True)
             elif entry['type'] == 'user_message':
                 st.markdown(f"""
                 <div class="user-message">
-                    <div class="message-label">👤 أنت</div>
+                    <div class="message-label"> أنت</div>
                     <div>{entry['content']}</div>
                 </div>
                 """, unsafe_allow_html=True)
             elif entry['type'] == 'ai_response':
                 st.markdown(f"""
                 <div class="ai-message">
-                    <div class="message-label">🤖 المساعد</div>
+                    <div class="message-label"> وِفاق</div>
                     <div>{entry['content']}</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -706,8 +706,8 @@ def page_chatbot():
         if not st.session_state.additional_info_asked and current_index >= total_questions:
             st.markdown(f"""
             <div class="ai-message">
-                <div class="message-label">🤖 المساعد</div>
-                <div>هل تود إضافة أي معلومات إضافية للعرض؟</div>
+                <div class="message-label"> وِفاق</div>
+                <div>هل ترغب بإضافة أي معلومات إضافية لدمجها داخل العرض الفني؟</div>
                 <div style="margin-top:10px; font-size:0.9em; color:#666;">
                 (مثل: شهادات، جوائز، مشاريع سابقة، ميزات تنافسية)
                 </div>
@@ -759,13 +759,13 @@ def page_chatbot():
                     value=st.session_state[f'input_value_{current_index}'],
                     key=f"chat_input_{current_index}",
                     height=100,
-                    placeholder="اكتب إجابتك أو استفسارك هنا...",
+                    placeholder="اكتب إجابتك أو استفسارك هنا",
                     label_visibility="collapsed"
                 )
             with col2:
                 st.write("")  # spacing
                 st.write("")  # spacing
-                send_button = st.button("إرسال ⬆️", use_container_width=True, type="primary")
+                send_button = st.button("إرسال ", use_container_width=True, type="primary")
             
             if send_button and user_input.strip():
                 # Clear input box
@@ -848,7 +848,7 @@ def page_chatbot():
             with col2:
                 st.write("")  # spacing
                 st.write("")  # spacing
-                finish_button = st.button("إرسال ⬆️", use_container_width=True, type="primary")
+                finish_button = st.button("إرسال", use_container_width=True, type="primary")
             
             if finish_button:
                 st.session_state.additional_info = additional_input if additional_input.strip() else None
@@ -912,63 +912,68 @@ def save_chat_history():
 # ============================================
 # PAGE 3: Generate Proposal
 # ============================================
+#headline of the page
+
 def page_proposal():
     st.markdown("""
     <div style='text-align: center; padding: 1.5rem 0;'>
         <h1 style='font-size: 2.5rem; margin-bottom: 0.5rem;'>
-            📄 توليد العرض الفني
+             إعداد العرض الفني
         </h1>
         <p style='font-size: 1.1rem; color: #666;'>
-            إنشاء عرض فني احترافي بالذكاء الاصطناعي
-        </p>
+            
     </div>
     """, unsafe_allow_html=True)
     st.markdown("---")
     
     # Check if previous steps are completed
     if not st.session_state.additional_info_asked:
-        st.warning("⚠️ يجب إكمال جمع المعلومات أولاً")
+        st.warning(" يجب إكمال جمع المعلومات أولاً")
         col1, col2, col3 = st.columns([1, 1, 1])
         with col1:
-            if st.button("⬅️ العودة للمحادثة", use_container_width=True):
+            if st.button(" العودة للمحادثة", use_container_width=True):
                 st.session_state.page = 2
                 st.rerun()
         return
     
-    st.success("✅ تم جمع جميع المعلومات المطلوبة!")
+    #st.success(" ! تم جمع جميع المعلومات المطلوبة")
     
-    st.markdown("---")
+    
+    #st.markdown("---")
     
     # Summary of collected data
-    st.subheader(" ملخص البيانات المجمعة")
+    st.subheader("  المعلومات المدخلة")
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("معايير RFP", " جاهز")
+        st.metric("متطلبات المناقصة", " جاهز")
     
     with col2:
         st.metric("معلومات الشركة", " جاهز")
     
     with col3:
         answers_count = len(st.session_state.answers)
-        st.metric("الإجابات المجمعة", f"{answers_count} سؤال")
+        st.metric(" إجابات الاستفسارات ", f"{answers_count} سؤال")
+
+    st.success(" ! تم جمع المعلومات المطلوبة")
+    
     
     st.markdown("---")
     
-    # Generation section
-    st.subheader(" توليد العرض")
+    # # Generation section
+    # st.subheader(" بدء إعداد العرض")
     
-    st.info("""
-    💡 **ملاحظة:** عملية توليد العرض قد تستغرق 2-5 دقائق حيث يقوم الذكاء الاصطناعي بـ:
-    - تحليل جميع البيانات المجمعة
-    - كتابة 16 قسم من العرض الفني
-    - مراجعة وتنسيق المحتوى
-    """)
+    # st.info("""
+    #  **ملاحظة :** عملية توليد العرض قد تستغرق 2-5 دقائق حيث يقوم الذكاء الاصطناعي بـ
+    # - تحليل جميع البيانات المجمعة
+    # - كتابة 16 قسم من العرض الفني
+    # - مراجعة وتنسيق المحتوى
+    # """)
     
     # Check if proposal already generated in THIS session
     if st.session_state.get('proposal_generated', False):
-        st.success(" تم توليد العرض بنجاح!")
+        st.success(" تم توليد العرض بنجاح")
         
         col1, col2 = st.columns(2)
         
@@ -989,7 +994,7 @@ def page_proposal():
                     docx_content = f.read()
                 
                 st.download_button(
-                    label=" تحميل العرض (Word)",
+                    label=" تحميل العرض ",
                     data=docx_content,
                     file_name="proposal.docx",
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -1037,15 +1042,15 @@ def generate_proposal_workflow():
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            # Import proposal generator
-            status_text.text(" تحميل الموديول...")
-            progress_bar.progress(10)
+            # # Import proposal generator
+            # status_text.text(" تحميل الموديول...")
+            # progress_bar.progress(10)
             
             from modules.proposal_generator import generate_proposal
             
-            # Generate proposal (both MD and Word)
-            status_text.text(" بدء توليد الأقسام...")
-            progress_bar.progress(30)
+            # # Generate proposal (both MD and Word)
+            # status_text.text(" بدء توليد الأقسام...")
+            # progress_bar.progress(30)
             
             proposal = generate_proposal(
                 rfp_criteria_file="data/outputs/criteria_with_weights.json",
@@ -1057,12 +1062,12 @@ def generate_proposal_workflow():
             )
             
             progress_bar.progress(100)
-            status_text.text(" تم توليد العرض بنجاح!")
+            #status_text.text(" !تم توليد العرض بنجاح")
             
             # Mark as generated in session
             st.session_state.proposal_generated = True
             
-            st.success(" تم توليد العرض الفني بنجاح!")
+            st.success(" ! تم توليد العرض الفني بنجاح")
             
             # Check if Word was created
             docx_exists = os.path.exists("data/outputs/proposal.docx")
@@ -1098,7 +1103,7 @@ def generate_proposal_workflow():
             
         except FileNotFoundError as e:
             st.error(f" خطأ: ملف مفقود - {e}")
-            st.info("💡 تأكد من إكمال جميع الخطوات السابقة")
+            st.info(" تأكد من إكمال جميع الخطوات السابقة")
             
         except Exception as e:
             st.error(f" حدث خطأ: {e}")
@@ -1192,7 +1197,7 @@ def main():
             status_items.append(("", f"تم استخراج {questions_count} سؤال", True))
         
         if st.session_state.additional_info_asked:
-            status_items.append(("", "تم جمع جميع المعلومات", True))
+            status_items.append(("", " تم استكمال جميع البيانات المطلوبة بنجاح.يمكنك الآن توليد العرض الفني النهائي.", True))
         
         for icon, text, is_complete in status_items:
             color = "rgba(76, 175, 80, 0.9)" if is_complete else "rgba(255,255,255,0.5)"

@@ -213,9 +213,15 @@ def writer_node(state: WorkerState):
 
     # Prepare user answers summary
     answers_summary = ""
+    additional_info = ""
+    
     if state["user_answers"]:
         total_answers = state["user_answers"].get("total_questions", 0)
         answers_summary = f"إجمالي الأسئلة المجاب عليها: {total_answers}"
+        
+        # Add additional info if exists
+        if state["user_answers"].get("additional_info"):
+            additional_info = state["user_answers"]["additional_info"]
 
     prompt = f"""
 أنت خبير في كتابة العروض الفنية للمناقصات الحكومية.
@@ -249,6 +255,9 @@ def writer_node(state: WorkerState):
 
 💬 إجابات المستخدم:
 {answers_summary}
+
+{"✨ معلومات إضافية من المستخدم:" if additional_info else ""}
+{additional_info if additional_info else ""}
 
 ===== المطلوب =====
 اكتب محتوى القسم مباشرة باللغة العربية الفصحى، بدون كتابة العنوان مرة أخرى.
